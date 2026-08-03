@@ -17,11 +17,13 @@ INTERVAL=300
 send()
 {
     local cId=$1
-    local MSG=$(echo "$2" | sed 's/"/\\"/g')
+    local MSG
+    printf -v MSG '%b' "$2"
     out=$(curl -s -X POST \
-        -H 'Content-Type: application/json' \
-        -d "{\"chat_id\": \"${cId}\", \"text\": \"${MSG}\", \"parse_mode\": \"HTML\"}" \
-        https://api.telegram.org/bot"${BOT_TOKEN}/sendMessage")
+        "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
+        --data-urlencode "chat_id=${cId}" \
+        --data-urlencode "text=${MSG}" \
+        --data-urlencode "text=HTML")
     echo "${out}" | jq -r ".result.message_id"
 }
 
