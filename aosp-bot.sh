@@ -3,7 +3,8 @@
 DATA_FILE=/home/ido/aosp-bot/data.txt
 CONFIG_FILE=/home/ido/aosp-bot/bot.conf
 BOT_TOKEN=$(grep "token = " "${CONFIG_FILE}" | sed 's/token = //')
-ALERT_CHAT_ID=$(grep "alert_chat_id = " "${CONFIG_FILE}" | sed 's/alert_chat_id = //')
+ALERT_CHAT_IDS_STR=$(grep "alert_chat_ids = " "${CONFIG_FILE}" | sed 's/alert_chat_ids = //')
+IFS=',' read -ra ALERT_CHAT_IDS <<< "$ALERT_CHAT_IDS_STR"
 MANIFEST_URL="https://android.googlesource.com/platform/manifest"
 BUILD_SCRIPT="/home/ido/aosp-bot/build.py"
 BUILD_INFO_SCRIPT="/home/ido/aosp-bot/build-info.py"
@@ -23,7 +24,7 @@ send()
         "https://api.telegram.org/bot${BOT_TOKEN}/sendMessage" \
         --data-urlencode "chat_id=${cId}" \
         --data-urlencode "text=${MSG}" \
-        --data-urlencode "text=HTML")
+        --data-urlencode "parse_mode=HTML")
     echo "${out}" | jq -r ".result.message_id"
 }
 
@@ -64,7 +65,9 @@ while true; do
         msgTxt="${msgTxt}Ver: <code>${ver}</code>\n"
         msgTxt="${msgTxt}Rev: <code>${rev}</code>\n\n"
         msgTxt="${msgTxt}old: <code>${last_tag}</code>"
-        send "${ALERT_CHAT_ID}" "${msgTxt}"
+        for chat in "${ALERT_CHAT_IDS[@]}"; do
+            send "${chat}" "${msgTxt}"
+        done
         # save in data
         last_tag="$newestTag"
         sed -i "/^last_tag=/c\\last_tag=${last_tag}" "${DATA_FILE}"
@@ -94,7 +97,9 @@ while true; do
         msgTxt="${msgTxt}<code>${ver}</code> - (<code>${id}</code>, <code>${date}</code>)\n"
         msgTxt="${msgTxt}<a href=\"${link}\">Link</a> (<code>${sha}</code>)\n\n"
         msgTxt="${msgTxt}old: <code>${oldVer}</code> - (<code>${oldId}</code> ; <code>${oldDate}</code>)"
-        send "${ALERT_CHAT_ID}" "${msgTxt}"
+        for chat in "${ALERT_CHAT_IDS[@]}"; do
+            send "${chat}" "${msgTxt}"
+        done
         # save in data
         last_build="$newestBuild"
         sed -i "/^last_build=/c\\last_build=${last_build}" "${DATA_FILE}"
@@ -121,7 +126,9 @@ while true; do
         msgTxt="<b>New build ID detected:</b>\n"
         msgTxt="${msgTxt}<code>${id}</code> - (<code>${tag}</code>, <code>${patch}</code>)\n"
         msgTxt="${msgTxt}old: <code>${oldId}</code> - (<code>${oldTag}</code> ; <code>${oldPatch}</code>)"
-        send "${ALERT_CHAT_ID}" "${msgTxt}"
+        for chat in "${ALERT_CHAT_IDS[@]}"; do
+            send "${chat}" "${msgTxt}"
+        done
         # save in data
         last_build_info="$newestBuildInfo"
         sed -i "/^last_build_info=/c\\last_build_info=${last_build_info}" "${DATA_FILE}"
@@ -146,7 +153,9 @@ while true; do
         msgTxt="<b>New bulletin detected:</b>\n"
         msgTxt="${msgTxt}<a href=\"https://source.android.com${link}\">${date}</a>\n"
         msgTxt="${msgTxt}old: <a href=\"https://source.android.com${oldLink}\">${oldDate}</a>"
-        send "${ALERT_CHAT_ID}" "${msgTxt}"
+        for chat in "${ALERT_CHAT_IDS[@]}"; do
+            send "${chat}" "${msgTxt}"
+        done
         # save in data
         last_bulletin="$newestBulletin"
         sed -i "/^last_bulletin=/c\\last_bulletin=${last_bulletin}" "${DATA_FILE}"
