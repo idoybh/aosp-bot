@@ -1,6 +1,7 @@
 import sys
 import time
 from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,7 +14,10 @@ chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-driver = webdriver.Chrome(options=chrome_options)
+driver = webdriver.Chrome(
+    service=Service("/usr/bin/chromedriver"),
+    options=chrome_options
+)
 
 url = "https://source.android.com/docs/setup/reference/build-numbers"
 
